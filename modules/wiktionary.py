@@ -76,6 +76,8 @@ def wiktionary(word):
             mode = 'symbol'
         elif 'id="Participle"' in line:
             mode = 'participle'
+        elif 'id="Contraction"' in line:
+            mode = 'contraction'
         elif (mode == 'etmyology') and ('<p>' in line):
             etymology = text(line)
 
@@ -90,7 +92,7 @@ parts = ('preposition', 'particle', 'noun', 'verb',
     'adjective', 'adverb', 'initialism', 'interjection', 'prefix',
     'proper noun', 'determiner', 'pronoun', 'prepositional phrase',
     'conjunction', 'abbreviation', 'numeral', 'phrase', 'symbol',
-    'participle', 'suffix')
+    'participle', 'contraction', 'suffix')
 
 def format(word, definitions, number=2):
     result = '%s' % word.encode('utf-8')
