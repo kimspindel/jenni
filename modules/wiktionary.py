@@ -91,14 +91,16 @@ parts = ('preposition', 'particle', 'noun', 'verb',
     'proper noun', 'determiner', 'pronoun', 'prepositional phrase',
     'conjunction', 'abbreviation', 'numeral', 'phrase', 'symbol',
     'participle', 'suffix')
+# Make the below match the above, otherwise it's pointless :x
 flagparts = dict(zip(('p','P','n','v',
-    'a','A','i','f','r'),parts))
+    'a','A','i','j','r'),parts))
 
 def format(word, definitions, number=2, force_part=None):
     result = '%s' % word.encode('utf-8')
     # if there is a definition for force_part use only that,
     # otherwise loop through parts
     for part in (parts if not force_part else (force_part,)):
+        #print "Testing part: " + part + "(type: " + str(type(part)) + ", number " + str(number) + ")" #FIXME
         if definitions.has_key(part):
             defs = definitions[part][:number]
             result += u' \u2014 '.encode('utf-8') + ('%s: ' % part)
@@ -106,25 +108,49 @@ def format(word, definitions, number=2, force_part=None):
             result += ', '.join(n)
     return result.strip(' .,')
 
+def getclass(input):
+    """
+    in:     "-s" or "--smeg"
+    out:    "smeg" if in parts or if "s" in flagparts
+    """
+    if len(input) < 2:
+        return None
+    if len(input) == 2:
+        if input[0] == '-' and input[1] in flagparts.keys():
+            # valid "-s"
+            return flagparts[input[1]]
+        return None
+    if input[:2] == '--' and input[2:] in parts:
+        # valid "--smeg"
+        # python 2 is dumb, convert to ascii
+        return str(input[2:])
+    return None
+
 def wclass_word(input):
+    """
+    in:     "-s go on" or "--smeg go on"
+    out:    ('smeg', 'go on')
+    """
+    # split on whitespace
     try:
-        part, word = input.group(2).split()
-    except:
-        # unsplittable, return entire arg
-        return None, input.group(2)
-    # two args. don't crash on <2-character part
-    try:
-        if part[0] == '-':
-            if part[1] in flagparts.keys():
-                return flagparts[part[1]], word
-    except:
-        pass
-    # three args, but invalid flag. just ignore it for now and return last arg
-    return None, word
+        words = input.split()
+    except: # input may be None
+        return None, input
+    if len(words) == 1:
+        # single word
+        return None, input
+    # two args or more.
+    part = getclass(words[0])
+    word = ' '.join(words[1:])
+    # valid part
+    if part is not None:
+        return part, word
+    # invalid part
+    return None, input
 
 def define(jenni, input):
     #word = input.group(2)
-    wclass, word = wclass_word(input)
+    wclass, word = wclass_word(input.group(2))
     if not word:
         jenni.reply("You want the definition for what?")
         return
